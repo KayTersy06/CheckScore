@@ -353,7 +353,13 @@ input, select { font-family: inherit; }
 .site-footer {
   text-align: center; padding: 1.5rem; font-size: 0.78rem;
   color: var(--clr-muted); border-top: 1px solid var(--clr-border);
+  display: flex; flex-direction: column; gap: 0.4rem;
 }
+.footer-credit a {
+  color: var(--clr-primary); font-weight: 600;
+  border-bottom: 1px dashed transparent; transition: border-color var(--transition);
+}
+.footer-credit a:hover { border-color: var(--clr-primary); }
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 620px) {
