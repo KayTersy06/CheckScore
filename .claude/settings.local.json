@@ -3,7 +3,12 @@
     "allow": [
       "WebSearch",
       "Bash(python3 -)",
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "WebFetch(domain:issuu.com)",
+      "WebFetch(domain:www.studentroom.co.za)",
+      "WebFetch(domain:www.wits.ac.za)",
+      "WebFetch(domain:www.su.ac.za)",
+      "WebFetch(domain:www.bursariesafrica.co.za)"
     ]
   }
 }

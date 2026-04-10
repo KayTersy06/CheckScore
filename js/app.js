@@ -1,15 +1,15 @@
 // ============================================================
-// CheckScore — Application Logic
+// CheckScore — Application Logic (South Africa / NSC only)
 // ============================================================
 
 // ── State ─────────────────────────────────────────────────
 const state = {
   step: 1,
-  country: null,       // country code e.g. "za"
   subjectGrades: {},   // { "Mathematics": "7", ... }
   calculatedScore: 0,
+  detectedStreams: new Set(),
   results: [],
-  filters: { faculty: "all", type: "all", search: "", eligibleOnly: false },
+  filters: { faculty: "all", type: "all", search: "", eligibleOnly: false, streamOnly: false },
   rowIndex: 0,
 };
 
@@ -31,51 +31,12 @@ function goToStep(n) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// ── Step 1: Country selection ─────────────────────────────
-function initStep1() {
-  const cards = document.querySelectorAll(".country-card");
-  cards.forEach(card => {
-    card.addEventListener("click", () => {
-      cards.forEach(c => c.classList.remove("selected"));
-      card.classList.add("selected");
-      state.country = card.dataset.country;
-      $("btn-step1-next").disabled = false;
-    });
-  });
-
-  $("btn-step1-next").addEventListener("click", () => {
-    if (!state.country) return;
-    // Reset subjects when changing country
-    state.subjectGrades = {};
-    state.rowIndex = 0;
-    goToStep(2);
-    initStep2();
-  });
-}
-
-// ── Step 2: Subject Grades ────────────────────────────────
-function getCountryConfig() {
-  return COUNTRIES[state.country];
-}
-
-function getGradeSystem() {
-  return GRADE_SYSTEMS[getCountryConfig().gradeSystem];
-}
-
-function getSubjectList() {
-  return SUBJECTS_BY_COUNTRY[state.country] || [];
-}
-
+// ── Step 1: Subject Grades (NSC / APS) ───────────────────
 function updateScoreDisplay() {
-  const score = calculateScore(state.country, state.subjectGrades);
+  const score = calculateAPS(state.subjectGrades);
   state.calculatedScore = score;
-  const cfg = getCountryConfig();
   $("live-score-value").textContent = score;
-  $("live-score-label").textContent = cfg.scoreLabel;
-  $("live-score-max").textContent   = `/ ${cfg.scoreMax}`;
-
-  // Progress bar
-  const pct = Math.min(100, Math.round((score / cfg.scoreMax) * 100));
+  const pct = Math.min(100, Math.round((score / 42) * 100));
   $("score-progress-bar").style.width = `${pct}%`;
   $("score-progress-bar").style.background =
     pct >= 70 ? "var(--clr-primary)" :
@@ -84,9 +45,6 @@ function updateScoreDisplay() {
 
 function createSubjectRow() {
   const idx = state.rowIndex++;
-  const subjects   = getSubjectList();
-  const gradeSystem = getGradeSystem();
-
   const row = document.createElement("div");
   row.className = "subject-row";
   row.dataset.idx = idx;
@@ -95,15 +53,13 @@ function createSubjectRow() {
   subjectSel.className = "subject-select";
   subjectSel.innerHTML =
     `<option value="">— Select subject —</option>` +
-    subjects.map(s => `<option value="${s}">${s}</option>`).join("");
+    NSC_SUBJECTS.map(s => `<option value="${s}">${s}</option>`).join("");
 
   const gradeSel = document.createElement("select");
   gradeSel.className = "grade-select";
   gradeSel.innerHTML =
     `<option value="">Grade</option>` +
-    gradeSystem.grades.map(g =>
-      `<option value="${g}">${g}</option>`
-    ).join("");
+    NSC_GRADES.map(g => `<option value="${g}">${g}</option>`).join("");
 
   const removeBtn = document.createElement("button");
   removeBtn.className = "btn-remove-row";
@@ -130,12 +86,34 @@ function createSubjectRow() {
 }
 
 function syncGrades() {
+  // First pass: collect all selected subject names (including blanks)
+  const rows = [...document.querySelectorAll("#subject-rows .subject-row")];
+  const seen = new Set();
+  const dupes = new Set();
+  rows.forEach(row => {
+    const subj = row.querySelector(".subject-select").value;
+    if (!subj) return;
+    if (seen.has(subj)) dupes.add(subj);
+    seen.add(subj);
+  });
+
+  // Second pass: mark duplicates visually and build grade map
   state.subjectGrades = {};
-  document.querySelectorAll("#subject-rows .subject-row").forEach(row => {
+  rows.forEach(row => {
     const subj  = row.querySelector(".subject-select").value;
     const grade = row.querySelector(".grade-select").value;
+    const isDupe = subj && dupes.has(subj);
+    row.classList.toggle("duplicate", isDupe);
     if (subj && grade) state.subjectGrades[subj] = grade;
   });
+
+  // Show or clear the duplicate warning
+  const err = $("grade-error");
+  if (dupes.size > 0 && !err.textContent.startsWith("Please")) {
+    err.textContent = `Duplicate subject${dupes.size > 1 ? "s" : ""}: ${[...dupes].join(", ")}. Only the last grade entered will be used.`;
+  } else if (dupes.size === 0 && err.textContent.startsWith("Duplicate")) {
+    err.textContent = "";
+  }
 }
 
 function updateRowCounter() {
@@ -143,57 +121,47 @@ function updateRowCounter() {
   $("row-count").textContent = `${n} subject${n !== 1 ? "s" : ""} added`;
 }
 
-function initStep2() {
-  const cfg = getCountryConfig();
-  const gs  = getGradeSystem();
-
-  // Panel header
-  $("step2-country-name").textContent = cfg.name;
-  $("step2-score-desc").textContent   = cfg.scoreDescription;
-
+function initStep1() {
   // Grade legend
   const legend = $("grade-legend");
-  legend.innerHTML = Object.entries(gs.gradeLabels)
+  legend.innerHTML = Object.entries(NSC_LABELS)
     .map(([g, l]) => `<span class="legend-item"><strong>${g}</strong> — ${l}</span>`)
     .join("");
 
-  // Clear rows
+  // Clear rows and reset index
   $("subject-rows").innerHTML = "";
   state.subjectGrades = {};
+  state.rowIndex = 0;
 
-  // Pre-populate rows
-  const defaultRows = Math.max(cfg.subjectMin, 6);
-  for (let i = 0; i < defaultRows; i++) {
+  // Pre-populate 6 rows
+  for (let i = 0; i < 6; i++) {
     $("subject-rows").appendChild(createSubjectRow());
   }
   updateRowCounter();
   updateScoreDisplay();
 
-  // Add subject button — re-wire listener each time step 2 is entered
+  // Re-wire add button to avoid duplicate listeners
   const addBtn = $("btn-add-subject");
   const newAddBtn = addBtn.cloneNode(true);
   addBtn.parentNode.replaceChild(newAddBtn, addBtn);
   $("btn-add-subject").addEventListener("click", () => {
-    if (document.querySelectorAll("#subject-rows .subject-row").length >= cfg.subjectMax + 2) return;
+    if (document.querySelectorAll("#subject-rows .subject-row").length >= 12) return;
     $("subject-rows").appendChild(createSubjectRow());
     updateRowCounter();
   });
 
-  $("btn-step2-back").onclick = () => goToStep(1);
-  $("btn-step2-next").onclick = () => {
+  $("btn-step1-next").onclick = () => {
     syncGrades();
     const err   = $("grade-error");
     const count = Object.keys(state.subjectGrades).length;
-    const min   = cfg.subjectMin;
 
-    if (count < min) {
-      err.textContent = `Please enter at least ${min} subjects with grades.`;
+    if (count < 6) {
+      err.textContent = "Please enter at least 6 subjects with grades.";
       return;
     }
 
-    // Warn if no English (for SA, ZW, BW, KE)
-    const engKeys = ["English Home Language","English First Additional Language",
-                     "English Language (O-Level)","English","English Language"];
+    // Require English
+    const engKeys = ["English Home Language", "English First Additional Language"];
     const hasEnglish = engKeys.some(k => state.subjectGrades[k]);
     if (!hasEnglish) {
       err.textContent =
@@ -202,32 +170,38 @@ function initStep2() {
     }
 
     err.textContent = "";
-    state.calculatedScore = calculateScore(state.country, state.subjectGrades);
+    state.calculatedScore  = calculateAPS(state.subjectGrades);
+    state.detectedStreams   = detectStreams(state.subjectGrades);
     computeResults();
     populateFilters();
-    goToStep(3);
+    goToStep(2);
     renderResults();
   };
 }
 
-// ── Step 3: Results ───────────────────────────────────────
+// ── Step 2: Results ───────────────────────────────────────
 function computeResults() {
   state.results = COURSES
-    .filter(c => c.country === state.country)
     .map(c => {
       const r = checkEligibility(c, state.calculatedScore, state.subjectGrades);
-      return { course: c, ...r };
+      const streamMatch = c.streams.some(s => state.detectedStreams.has(s));
+      return { course: c, ...r, streamMatch };
     })
     .sort((a, b) => {
+      // Primary: eligible first
       if (a.eligible !== b.eligible) return a.eligible ? -1 : 1;
+      // Secondary: stream match first within each group
+      if (a.streamMatch !== b.streamMatch) return a.streamMatch ? -1 : 1;
+      // Tertiary: alphabetical
       return a.course.name.localeCompare(b.course.name);
     });
 }
 
 function getFilteredResults() {
   return state.results.filter(r => {
-    const { faculty, type, search, eligibleOnly } = state.filters;
-    if (eligibleOnly && !r.eligible) return false;
+    const { faculty, type, search, eligibleOnly, streamOnly } = state.filters;
+    if (eligibleOnly && !r.eligible)    return false;
+    if (streamOnly  && !r.streamMatch)  return false;
     if (faculty !== "all" && r.course.faculty !== faculty) return false;
     if (type !== "all" && r.institution && r.institution.type !== type) return false;
     if (search) {
@@ -240,18 +214,26 @@ function getFilteredResults() {
 }
 
 function renderResults() {
-  const cfg      = getCountryConfig();
-  const filtered = getFilteredResults();
-  const totalEligible   = state.results.filter(r => r.eligible).length;
+  const filtered         = getFilteredResults();
+  const totalEligible    = state.results.filter(r => r.eligible).length;
   const filteredEligible = filtered.filter(r => r.eligible).length;
 
   $("summary-score").textContent    = state.calculatedScore;
-  $("summary-score-label").textContent = cfg.scoreLabel;
   $("summary-subjects").textContent = Object.keys(state.subjectGrades).length;
   $("summary-total").textContent    = totalEligible;
   $("summary-filtered").textContent = filteredEligible;
-  $("results-country-flag").textContent = COUNTRIES[state.country].flag;
-  $("results-country-name").textContent = COUNTRIES[state.country].name;
+
+  // Pathway banner
+  const streamBanner = $("stream-banner");
+  const streamChips  = $("detected-streams");
+  if (state.detectedStreams.size > 0) {
+    streamChips.innerHTML = [...state.detectedStreams]
+      .map(s => `<span class="stream-chip">${STREAM_LABELS[s]}</span>`)
+      .join("");
+    show(streamBanner);
+  } else {
+    hide(streamBanner);
+  }
 
   renderCards(filtered);
 }
@@ -273,11 +255,8 @@ function renderCards(items) {
     return;
   }
 
-  const cfg       = getCountryConfig();
-  const gradeSystem = getGradeSystem();
-
   items.forEach(r => {
-    const { course, eligible, scoreShortfall, missingSubjects, failedSubjects, institution } = r;
+    const { course, eligible, scoreShortfall, missingSubjects, failedSubjects, institution, streamMatch } = r;
     const card = document.createElement("article");
     card.className = `result-card ${eligible ? "eligible" : "ineligible"}`;
 
@@ -285,21 +264,25 @@ function renderCards(items) {
       ? `<span class="badge badge-pass">Eligible</span>`
       : `<span class="badge badge-fail">Not Eligible</span>`;
 
+    const pathwayBadge = streamMatch
+      ? `<span class="badge badge-stream">Pathway match</span>`
+      : "";
+
     const instName = institution ? institution.name     : "Unknown";
     const instType = institution ? institution.type     : "";
     const instUrl  = institution ? institution.url      : "#";
     const instLoc  = institution ? institution.location : "";
 
-    // Issues
+    // Issues list
     let issues = "";
     if (!eligible) {
       const li = [];
       if (scoreShortfall > 0) {
-        li.push(`<li>${cfg.scoreLabel} too low by <strong>${scoreShortfall} point${scoreShortfall !== 1 ? "s" : ""}</strong> (need ${course.minScore})</li>`);
+        li.push(`<li>APS too low by <strong>${scoreShortfall} point${scoreShortfall !== 1 ? "s" : ""}</strong> (need ${course.minScore})</li>`);
       }
       missingSubjects.forEach(s => li.push(`<li>Missing result for <strong>${s}</strong></li>`));
       failedSubjects.forEach(({ subject, yourGrade, needGrade }) =>
-        li.push(`<li><strong>${subject}</strong>: got ${yourGrade}, need ${needGrade}</li>`)
+        li.push(`<li><strong>${subject}</strong>: got Level ${yourGrade}, need Level ${needGrade}</li>`)
       );
       if (li.length) issues = `<ul class="issues-list">${li.join("")}</ul>`;
     }
@@ -309,8 +292,8 @@ function renderCards(items) {
       ? course.requiredSubjects.map(req => {
           const sg = state.subjectGrades[req.subject];
           const isMandatory = course.mandatorySubjects.includes(req.subject);
-          const pts_yours = sg ? (gradeSystem.gradePoints[sg] || 0) : null;
-          const pts_need  = gradeSystem.gradePoints[req.minGrade] || 0;
+          const pts_yours = sg ? (NSC_POINTS[sg] || 0) : null;
+          const pts_need  = NSC_POINTS[req.minGrade] || 0;
           const cls = !sg ? "req-missing"
             : pts_yours >= pts_need ? "req-pass" : "req-fail";
           const gradeTag = sg ? `<span class="req-grade">${sg}</span>` : "";
@@ -321,14 +304,32 @@ function renderCards(items) {
     const notes = course.notes
       ? `<p class="card-notes">${course.notes}</p>` : "";
 
+    // Competitive programmes: meeting min APS does not guarantee an offer
+    const competitive = eligible && course.minScore >= 32
+      ? `<p class="card-competitive">
+           <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
+             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-5a1 1 0 00-1 1v2a1 1 0 102 0V9a1 1 0 00-1-1z" clip-rule="evenodd"/>
+           </svg>
+           Meets minimum APS — admission not guaranteed. Places are merit-ranked.
+         </p>`
+      : "";
+
+    // Stream chips on the card
+    const courseStreamChips = course.streams
+      .map(s => {
+        const isMatch = state.detectedStreams.has(s);
+        return `<span class="stream-chip-sm ${isMatch ? "stream-match" : "stream-other"}">${STREAM_LABELS[s]}</span>`;
+      }).join("");
+
     card.innerHTML = `
       <div class="card-header">
         <div>
           <h3 class="card-title">${course.name}</h3>
           <p class="card-faculty">${course.faculty}</p>
         </div>
-        ${badge}
+        <div class="card-badges">${pathwayBadge}${badge}</div>
       </div>
+      <div class="card-streams">${courseStreamChips}</div>
       <div class="card-institution">
         <span class="inst-type">${instType}</span>
         <a href="${instUrl}" target="_blank" rel="noopener noreferrer" class="inst-link">
@@ -345,7 +346,7 @@ function renderCards(items) {
         </span>
       </div>
       <div class="card-score-row">
-        <span class="score-label-sm">${cfg.scoreLabel} needed</span>
+        <span class="score-label-sm">APS needed</span>
         <span class="score-value ${scoreShortfall <= 0 ? "score-ok" : "score-low"}">${course.minScore}</span>
         <span class="score-yours">Yours: ${state.calculatedScore}</span>
       </div>
@@ -354,6 +355,7 @@ function renderCards(items) {
         <div class="req-tags">${reqTags}</div>
       </div>
       ${issues}
+      ${competitive}
       ${notes}
     `;
     grid.appendChild(card);
@@ -362,16 +364,12 @@ function renderCards(items) {
 
 // ── Filters ───────────────────────────────────────────────
 function populateFilters() {
-  const faculties = [...new Set(
-    COURSES.filter(c => c.country === state.country).map(c => c.faculty)
-  )].sort();
+  const faculties = [...new Set(COURSES.map(c => c.faculty))].sort();
   const fSel = $("filter-faculty");
   fSel.innerHTML = `<option value="all">All faculties</option>` +
     faculties.map(f => `<option value="${f}">${f}</option>`).join("");
 
-  const types = [...new Set(
-    INSTITUTIONS.filter(i => i.country === state.country).map(i => i.type)
-  )].sort();
+  const types = [...new Set(INSTITUTIONS.map(i => i.type))].sort();
   const tSel = $("filter-type");
   tSel.innerHTML = `<option value="all">All types</option>` +
     types.map(t => `<option value="${t}">${t}</option>`).join("");
@@ -394,41 +392,44 @@ function initFilters() {
     state.filters.eligibleOnly = e.target.checked;
     renderResults();
   });
+  $("filter-stream").addEventListener("change", e => {
+    state.filters.streamOnly = e.target.checked;
+    renderResults();
+  });
 }
 
 function clearFilters() {
-  state.filters = { faculty: "all", type: "all", search: "", eligibleOnly: false };
-  $("filter-faculty").value = "all";
-  $("filter-type").value    = "all";
-  $("filter-search").value  = "";
+  state.filters = { faculty: "all", type: "all", search: "", eligibleOnly: false, streamOnly: false };
+  $("filter-faculty").value    = "all";
+  $("filter-type").value       = "all";
+  $("filter-search").value     = "";
   $("filter-eligible").checked = false;
+  $("filter-stream").checked   = false;
   renderResults();
 }
 
 // ── Start Over ────────────────────────────────────────────
 function startOver() {
-  state.country = null;
-  state.subjectGrades = {};
+  state.subjectGrades   = {};
   state.calculatedScore = 0;
-  state.results = [];
-  state.filters = { faculty: "all", type: "all", search: "", eligibleOnly: false };
-  document.querySelectorAll(".country-card").forEach(c => c.classList.remove("selected"));
-  $("btn-step1-next").disabled = true;
-  // Reset filter DOM directly — do NOT call clearFilters() here because
-  // that calls renderResults() which requires state.country to be set.
+  state.detectedStreams  = new Set();
+  state.results         = [];
+  state.filters         = { faculty: "all", type: "all", search: "", eligibleOnly: false, streamOnly: false };
   $("filter-faculty").value    = "all";
   $("filter-type").value       = "all";
   $("filter-search").value     = "";
   $("filter-eligible").checked = false;
+  $("filter-stream").checked   = false;
   goToStep(1);
+  initStep1();
 }
 
 // ── Init ──────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-  initStep1();
   initFilters();
+  initStep1();
   goToStep(1);
 
-  $("btn-step3-back").addEventListener("click", () => goToStep(2));
+  $("btn-step2-back").addEventListener("click", () => goToStep(1));
   $("btn-start-over").addEventListener("click", startOver);
 });
