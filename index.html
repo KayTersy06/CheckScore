@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CheckScore — Southern &amp; East Africa Course Finder</title>
+  <meta name="description" content="Enter your exam results to instantly discover which university courses and institutions you qualify for across South Africa, Zimbabwe, Kenya, and Botswana." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="nav-inner">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+        CheckScore
+        <span class="logo-sub">Africa Course Finder</span>
+      </div>
+      <span class="nav-tag">Illustrative data — verify with institutions</span>
+    </div>
+  </header>
+
+  <!-- ── Hero ────────────────────────────────────────────── -->
+  <section class="hero">
+    <h1>Find Courses You Qualify For</h1>
+    <p>
+      Enter your matric or school-leaving results and instantly see which university
+      programmes and institutions match — across South Africa, Zimbabwe, Kenya, and Botswana.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num">100+</div><div class="lbl">Courses</div></div>
+      <div class="hero-stat"><div class="num">31</div><div class="lbl">Institutions</div></div>
+      <div class="hero-stat"><div class="num">4</div><div class="lbl">Countries</div></div>
+      <div class="hero-stat"><div class="num">Free</div><div class="lbl">Always</div></div>
+    </div>
+  </section>
+
+  <!-- ── Main ────────────────────────────────────────────── -->
+  <main class="main-wrap">
+
+    <!-- Stepper -->
+    <nav class="stepper" aria-label="Progress steps">
+      <div class="stepper-item active">
+        <div class="stepper-circle">1</div>
+        <span class="stepper-label">Country</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="stepper-item">
+        <div class="stepper-circle">2</div>
+        <span class="stepper-label">Results</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="stepper-item">
+        <div class="stepper-circle">3</div>
+        <span class="stepper-label">Eligible Courses</span>
+      </div>
+    </nav>
+
+    <!-- ── Step 1: Country ───────────────────────────────── -->
+    <section class="step-panel" id="step-1">
+      <h2 class="panel-title">Where did you write your exams?</h2>
+      <p class="panel-desc">
+        Select your country. The app will load the correct grading system and calculate
+        your admission score (APS, points, or aggregate) automatically.
+      </p>
+
+      <div class="country-grid">
+
+        <div class="country-card" data-country="za" role="button" tabindex="0" aria-label="South Africa">
+          <div class="country-flag">🇿🇦</div>
+          <div class="country-name">South Africa</div>
+          <div class="country-system">NSC · APS Score (0–42)</div>
+          <div class="country-count">55 courses · 18 institutions</div>
+        </div>
+
+        <div class="country-card" data-country="zw" role="button" tabindex="0" aria-label="Zimbabwe">
+          <div class="country-flag">🇿🇼</div>
+          <div class="country-name">Zimbabwe</div>
+          <div class="country-system">ZIMSEC A-Level · Points (0–15)</div>
+          <div class="country-count">10 courses · 5 institutions</div>
+        </div>
+
+        <div class="country-card" data-country="ke" role="button" tabindex="0" aria-label="Kenya">
+          <div class="country-flag">🇰🇪</div>
+          <div class="country-name">Kenya</div>
+          <div class="country-system">KCSE · Mean Points (0–12)</div>
+          <div class="country-count">10 courses · 5 institutions</div>
+        </div>
+
+        <div class="country-card" data-country="bw" role="button" tabindex="0" aria-label="Botswana">
+          <div class="country-flag">🇧🇼</div>
+          <div class="country-name">Botswana</div>
+          <div class="country-system">BGCSE · Aggregate (0–54)</div>
+          <div class="country-count">8 courses · 3 institutions</div>
+        </div>
+
+      </div>
+
+      <div class="step-actions">
+        <button id="btn-step1-next" class="btn-primary" disabled>
+          Next — Enter Results
+          <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ── Step 2: Subject Grades ────────────────────────── -->
+    <section class="step-panel hidden" id="step-2">
+      <h2 class="panel-title">Enter Your <span id="step2-country-name">Results</span></h2>
+      <p class="panel-desc">
+        Select each subject and your grade. Your admission score is calculated live as you type.<br/>
+        <em id="step2-score-desc"></em>
+      </p>
+
+      <!-- Live score widget -->
+      <div class="score-display" role="status" aria-live="polite" aria-label="Current calculated score">
+        <div>
+          <div class="score-lbl" id="live-score-label">Score</div>
+          <div class="score-display-main">
+            <span class="score-num" id="live-score-value">0</span>
+            <span class="score-max" id="live-score-max">/ 42</span>
+          </div>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-track">
+            <div id="score-progress-bar"></div>
+          </div>
+          <div class="score-bar-hint">Score updates as you add subjects</div>
+        </div>
+      </div>
+
+      <!-- Grade system legend -->
+      <div class="grade-legend-wrap">
+        <div class="grade-legend-title">Grade reference</div>
+        <div id="grade-legend"></div>
+      </div>
+
+      <!-- Subject rows -->
+      <div class="olevel-header">
+        <span class="olevel-header-left">Your subjects &amp; grades</span>
+        <span id="row-count">6 subjects added</span>
+      </div>
+      <div id="subject-rows" role="list" aria-label="Subject grade entries"></div>
+
+      <div class="add-subject-bar">
+        <button id="btn-add-subject" class="btn-secondary" type="button">+ Add subject</button>
+        <span class="add-hint">Add all your relevant subjects for the best matching results.</span>
+      </div>
+
+      <p class="error-msg" id="grade-error" role="alert"></p>
+
+      <div class="step-actions">
+        <button id="btn-step2-back" class="btn-secondary">&larr; Back</button>
+        <button id="btn-step2-next" class="btn-primary">
+          Check My Eligibility
+          <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ── Step 3: Results ───────────────────────────────── -->
+    <section class="step-panel hidden" id="step-3">
+
+      <div class="results-header">
+        <h2 class="results-title">
+          <span id="results-country-flag"></span>
+          <span id="results-country-name"></span> — Eligibility Results
+        </h2>
+        <div class="summary-pills">
+          <span class="pill"><span id="summary-score-label">Score</span>: <strong id="summary-score">—</strong></span>
+          <span class="pill">Subjects entered: <strong id="summary-subjects">—</strong></span>
+          <span class="pill">Eligible courses: <strong id="summary-total">—</strong></span>
+          <span class="pill">Shown: <strong id="summary-filtered">—</strong></span>
+        </div>
+      </div>
+
+      <div class="disclaimer-banner" role="note">
+        <strong>Important:</strong> Cut-off scores shown here are illustrative and may change each academic year.
+        Always confirm current requirements on the institution's official website before applying.
+      </div>
+
+      <div class="step3-actions">
+        <button id="btn-step3-back" class="btn-secondary">&larr; Edit results</button>
+        <button id="btn-start-over" class="btn-danger">Start over</button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-bar" role="search" aria-label="Filter courses">
+        <div class="filter-group">
+          <label for="filter-search">Search</label>
+          <input id="filter-search" type="search" placeholder="Course or institution…" />
+        </div>
+        <div class="filter-group">
+          <label for="filter-faculty">Faculty</label>
+          <select id="filter-faculty"><option value="all">All faculties</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="filter-type">Institution type</label>
+          <select id="filter-type"><option value="all">All types</option></select>
+        </div>
+        <label class="eligible-toggle">
+          <input type="checkbox" id="filter-eligible" />
+          Eligible only
+        </label>
+      </div>
+
+      <!-- Cards -->
+      <div id="results-grid" role="list" aria-label="Course eligibility results"></div>
+
+    </section>
+
+  </main>
+
+  <!-- ── Footer ───────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <p>
+      CheckScore &mdash; Helping students across Southern &amp; East Africa explore admission options.<br/>
+      Data is illustrative. Verify requirements at official institution websites and national exam boards.
+    </p>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    // Keyboard support for country cards
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".country-card").forEach(card => {
+        card.addEventListener("keydown", e => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); card.click(); }
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
