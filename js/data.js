@@ -110,25 +110,25 @@ function detectStreams(subjectGrades) {
 // ── Institutions ──────────────────────────────────────────
 const INSTITUTIONS = [
   // Traditional / Comprehensive Universities
-  { id:"uct",   name:"University of Cape Town",                    type:"Traditional University",      location:"Cape Town, WC",     url:"https://www.uct.ac.za" },
-  { id:"wits",  name:"University of the Witwatersrand",            type:"Traditional University",      location:"Johannesburg, GP",  url:"https://www.wits.ac.za" },
-  { id:"sun",   name:"Stellenbosch University",                    type:"Traditional University",      location:"Stellenbosch, WC",  url:"https://www.sun.ac.za" },
-  { id:"up",    name:"University of Pretoria",                     type:"Traditional University",      location:"Pretoria, GP",      url:"https://www.up.ac.za" },
-  { id:"ukzn",  name:"University of KwaZulu-Natal",                type:"Traditional University",      location:"Durban, KZN",       url:"https://www.ukzn.ac.za" },
-  { id:"uj",    name:"University of Johannesburg",                 type:"Comprehensive University",    location:"Johannesburg, GP",  url:"https://www.uj.ac.za" },
-  { id:"nwu",   name:"North-West University",                      type:"Traditional University",      location:"Potchefstroom, NW", url:"https://www.nwu.ac.za" },
-  { id:"uwc",   name:"University of the Western Cape",             type:"Comprehensive University",    location:"Bellville, WC",     url:"https://www.uwc.ac.za" },
-  { id:"ufs",   name:"University of the Free State",               type:"Traditional University",      location:"Bloemfontein, FS",  url:"https://www.ufs.ac.za" },
-  { id:"nmu",   name:"Nelson Mandela University",                  type:"Comprehensive University",    location:"Gqeberha, EC",      url:"https://www.mandela.ac.za" },
-  { id:"ru",    name:"Rhodes University",                          type:"Traditional University",      location:"Makhanda, EC",      url:"https://www.ru.ac.za" },
-  { id:"ul",    name:"University of Limpopo",                      type:"Traditional University",      location:"Polokwane, LP",     url:"https://www.ul.ac.za" },
-  { id:"unisa", name:"University of South Africa (UNISA)",         type:"Distance University",         location:"National",          url:"https://www.unisa.ac.za" },
-  { id:"smu",   name:"Sefako Makgatho Health Sciences University",  type:"Traditional University",      location:"Pretoria, GP",      url:"https://www.smu.ac.za" },
+  { id:"uct",   name:"University of Cape Town",                    type:"Traditional University",      location:"Cape Town, WC",     url:"https://www.uct.ac.za",        appOpen:"2026-04-01", appClose:"2026-07-31", appNote:"No late applications accepted" },
+  { id:"wits",  name:"University of the Witwatersrand",            type:"Traditional University",      location:"Johannesburg, GP",  url:"https://www.wits.ac.za",       appOpen:"2026-03-01", appClose:"2026-09-30", appNote:"Health Sciences close 30 Jun 2026" },
+  { id:"sun",   name:"Stellenbosch University",                    type:"Traditional University",      location:"Stellenbosch, WC",  url:"https://www.sun.ac.za",        appOpen:"2026-04-01", appClose:"2026-07-31", appNote:"Health Sciences close earlier — verify on website" },
+  { id:"up",    name:"University of Pretoria",                     type:"Traditional University",      location:"Pretoria, GP",      url:"https://www.up.ac.za",         appOpen:"2026-04-01", appClose:"2026-06-30", appNote:null },
+  { id:"ukzn",  name:"University of KwaZulu-Natal",                type:"Traditional University",      location:"Durban, KZN",       url:"https://www.ukzn.ac.za",       appOpen:"2026-03-01", appClose:"2026-09-30", appNote:null },
+  { id:"uj",    name:"University of Johannesburg",                 type:"Comprehensive University",    location:"Johannesburg, GP",  url:"https://www.uj.ac.za",         appOpen:"2026-04-01", appClose:"2026-10-31", appNote:null },
+  { id:"nwu",   name:"North-West University",                      type:"Traditional University",      location:"Potchefstroom, NW", url:"https://www.nwu.ac.za",        appOpen:"2026-04-01", appClose:"2026-08-31", appNote:"Selection programmes close 30 Jun 2026" },
+  { id:"uwc",   name:"University of the Western Cape",             type:"Comprehensive University",    location:"Bellville, WC",     url:"https://www.uwc.ac.za",        appOpen:"2026-04-01", appClose:"2026-09-30", appNote:null },
+  { id:"ufs",   name:"University of the Free State",               type:"Traditional University",      location:"Bloemfontein, FS",  url:"https://www.ufs.ac.za",        appOpen:"2026-04-01", appClose:"2026-09-30", appNote:"Health Sciences close 31 May 2026" },
+  { id:"nmu",   name:"Nelson Mandela University",                  type:"Comprehensive University",    location:"Gqeberha, EC",      url:"https://www.mandela.ac.za",    appOpen:"2026-04-13", appClose:"2026-09-30", appNote:null },
+  { id:"ru",    name:"Rhodes University",                          type:"Traditional University",      location:"Makhanda, EC",      url:"https://www.ru.ac.za",         appOpen:"2026-04-01", appClose:"2026-09-30", appNote:null },
+  { id:"ul",    name:"University of Limpopo",                      type:"Traditional University",      location:"Polokwane, LP",     url:"https://www.ul.ac.za",         appOpen:"2026-04-01", appClose:"2026-09-30", appNote:null },
+  { id:"unisa", name:"University of South Africa (UNISA)",         type:"Distance University",         location:"National",          url:"https://www.unisa.ac.za",      appOpen:"2026-09-01", appClose:null,         appNote:"Rolling admissions — apply year-round" },
+  { id:"smu",   name:"Sefako Makgatho Health Sciences University",  type:"Traditional University",      location:"Pretoria, GP",      url:"https://www.smu.ac.za",        appOpen:"2026-04-01", appClose:"2026-07-31", appNote:null },
   // Universities of Technology
-  { id:"cput",  name:"Cape Peninsula University of Technology",    type:"University of Technology",    location:"Cape Town, WC",     url:"https://www.cput.ac.za" },
-  { id:"dut",   name:"Durban University of Technology",            type:"University of Technology",    location:"Durban, KZN",       url:"https://www.dut.ac.za" },
-  { id:"tut",   name:"Tshwane University of Technology",           type:"University of Technology",    location:"Pretoria, GP",      url:"https://www.tut.ac.za" },
-  { id:"cut",   name:"Central University of Technology",           type:"University of Technology",    location:"Bloemfontein, FS",  url:"https://www.cut.ac.za" },
+  { id:"cput",  name:"Cape Peninsula University of Technology",    type:"University of Technology",    location:"Cape Town, WC",     url:"https://www.cput.ac.za",       appOpen:"2026-05-01", appClose:"2026-08-31", appNote:"Late applications accepted to 30 Sep 2026" },
+  { id:"dut",   name:"Durban University of Technology",            type:"University of Technology",    location:"Durban, KZN",       url:"https://www.dut.ac.za",        appOpen:"2026-03-01", appClose:"2026-09-30", appNote:null },
+  { id:"tut",   name:"Tshwane University of Technology",           type:"University of Technology",    location:"Pretoria, GP",      url:"https://www.tut.ac.za",        appOpen:"2026-04-03", appClose:"2026-07-31", appNote:null },
+  { id:"cut",   name:"Central University of Technology",           type:"University of Technology",    location:"Bloemfontein, FS",  url:"https://www.cut.ac.za",        appOpen:"2026-04-01", appClose:"2026-09-30", appNote:null },
 ];
 
 function getInstitution(id) {

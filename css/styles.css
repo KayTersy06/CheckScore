@@ -58,6 +58,19 @@ input, select { font-family: inherit; }
   font-size: 0.7rem; background: var(--clr-warn-lt); color: var(--clr-warn);
   border: 1px solid #fde68a; border-radius: 20px; padding: 0.2rem 0.6rem;
 }
+.nav-right {
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.btn-share {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 0.78rem; font-weight: 600;
+  background: var(--clr-primary-lt); color: var(--clr-primary-dk);
+  border: 1px solid #86efac; border-radius: 20px;
+  padding: 0.22rem 0.7rem;
+  transition: background var(--transition), border-color var(--transition);
+}
+.btn-share:hover { background: #bbf7d0; border-color: var(--clr-primary); }
+.btn-share--copied { background: var(--clr-primary-lt); color: var(--clr-primary-dk); }
 
 /* ── Hero ────────────────────────────────────────────────── */
 .hero {
@@ -361,6 +374,46 @@ input, select { font-family: inherit; }
 }
 .footer-credit a:hover { border-color: var(--clr-primary); }
 
+/* ── Application deadline row ────────────────────────────── */
+.card-deadline {
+  display: flex; align-items: center; gap: 0.35rem;
+  font-size: 0.72rem; font-weight: 500;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  color: var(--clr-text-2);
+  background: var(--clr-bg);
+  border: 1px solid var(--clr-border);
+}
+.card-deadline svg { flex-shrink: 0; opacity: 0.7; }
+.deadline-status { font-weight: 600; }
+.deadline-note {
+  margin-left: 0.4rem;
+  font-weight: 400;
+  color: var(--clr-muted);
+}
+.deadline-note::before { content: "· "; }
+
+/* Colour variants */
+.deadline-urgent {
+  background: #fef2f2; border-color: #fca5a5; color: #991b1b;
+}
+.deadline-urgent .deadline-note { color: #b91c1c; }
+.deadline-warning {
+  background: var(--clr-warn-lt); border-color: #fcd34d; color: #92400e;
+}
+.deadline-warning .deadline-note { color: #b45309; }
+.deadline-closed {
+  background: #f8fafc; border-color: var(--clr-border); color: var(--clr-muted);
+  text-decoration: line-through; opacity: 0.75;
+}
+.deadline-rolling {
+  background: var(--clr-primary-lt); border-color: #86efac; color: #14532d;
+}
+.deadline-upcoming {
+  background: var(--clr-accent-lt); border-color: #7dd3fc; color: #0c4a6e;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 620px) {
   .hero { padding: 1.75rem 1rem 1.5rem; }
@@ -368,6 +421,7 @@ input, select { font-family: inherit; }
   .subject-row  { grid-template-columns: 1fr 90px 30px; }
   .grade-select { font-size: 0.78rem; }
   .nav-tag { display: none; }
+  .btn-share span { display: none; }
   .filters-bar { gap: 0.5rem; }
   .hero-stats  { gap: 1rem; }
   .score-display { flex-direction: column; align-items: flex-start; gap: 0.5rem; }

@@ -268,10 +268,56 @@ function renderCards(items) {
       ? `<span class="badge badge-stream">Pathway match</span>`
       : "";
 
-    const instName = institution ? institution.name     : "Unknown";
-    const instType = institution ? institution.type     : "";
-    const instUrl  = institution ? institution.url      : "#";
-    const instLoc  = institution ? institution.location : "";
+    const instName  = institution ? institution.name     : "Unknown";
+    const instType  = institution ? institution.type     : "";
+    const instUrl   = institution ? institution.url      : "#";
+    const instLoc   = institution ? institution.location : "";
+
+    // Application deadline row
+    let deadlineHtml = "";
+    if (institution && institution.appOpen) {
+      const today     = new Date();
+      today.setHours(0, 0, 0, 0);
+      const closeDate = institution.appClose ? new Date(institution.appClose) : null;
+      const openDate  = new Date(institution.appOpen);
+      const notYetOpen = today < openDate;
+      const isClosed   = closeDate && today > closeDate;
+      const daysLeft   = closeDate ? Math.ceil((closeDate - today) / 86400000) : null;
+
+      let statusClass = "deadline-open";
+      let statusText  = "";
+
+      if (institution.appClose === null) {
+        // Rolling admissions
+        statusClass = "deadline-rolling";
+        statusText  = "Rolling admissions";
+      } else if (notYetOpen) {
+        statusClass = "deadline-upcoming";
+        statusText  = `Opens ${openDate.toLocaleDateString("en-ZA", { day:"numeric", month:"short", year:"numeric" })}`;
+      } else if (isClosed) {
+        statusClass = "deadline-closed";
+        statusText  = `Closed ${closeDate.toLocaleDateString("en-ZA", { day:"numeric", month:"short", year:"numeric" })}`;
+      } else if (daysLeft !== null && daysLeft <= 14) {
+        statusClass = "deadline-urgent";
+        statusText  = `Closes in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`;
+      } else if (daysLeft !== null && daysLeft <= 60) {
+        statusClass = "deadline-warning";
+        statusText  = `Closes ${closeDate.toLocaleDateString("en-ZA", { day:"numeric", month:"short" })} (${daysLeft}d)`;
+      } else {
+        statusText = `Closes ${closeDate.toLocaleDateString("en-ZA", { day:"numeric", month:"short", year:"numeric" })}`;
+      }
+
+      const noteHtml = institution.appNote
+        ? `<span class="deadline-note">${institution.appNote}</span>` : "";
+
+      deadlineHtml = `
+        <div class="card-deadline ${statusClass}">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="11" height="11">
+            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+          </svg>
+          <span class="deadline-status">${statusText}</span>${noteHtml}
+        </div>`;
+    }
 
     // Issues list
     let issues = "";
@@ -345,6 +391,7 @@ function renderCards(items) {
           ${instLoc}
         </span>
       </div>
+      ${deadlineHtml}
       <div class="card-score-row">
         <span class="score-label-sm">APS needed</span>
         <span class="score-value ${scoreShortfall <= 0 ? "score-ok" : "score-low"}">${course.minScore}</span>
@@ -424,10 +471,48 @@ function startOver() {
   initStep1();
 }
 
+// ── Share ─────────────────────────────────────────────────
+function initShare() {
+  const btn = $("btn-share");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    const shareData = {
+      title: "CheckScore — SA Course Finder",
+      text:  "Find which South African university courses you qualify for based on your NSC results.",
+      url:   location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        showShareConfirm(btn);
+      }
+    } catch {
+      // User cancelled or clipboard blocked — do nothing
+    }
+  });
+}
+
+function showShareConfirm(btn) {
+  const original = btn.innerHTML;
+  btn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15">
+    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+  </svg> Copied!`;
+  btn.classList.add("btn-share--copied");
+  setTimeout(() => {
+    btn.innerHTML = original;
+    btn.classList.remove("btn-share--copied");
+  }, 2000);
+}
+
 // ── Init ──────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   initFilters();
   initStep1();
+  initShare();
   goToStep(1);
 
   $("btn-step2-back").addEventListener("click", () => goToStep(1));
