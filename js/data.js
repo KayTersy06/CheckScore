@@ -30,26 +30,113 @@ const NSC_LABELS = {
 const NSC_POINTS = { "7":7,"6":6,"5":5,"4":4,"3":3,"2":2,"1":1 };
 
 // ── NSC Subjects ──────────────────────────────────────────
+// Full list of subjects offered in South African high schools under the
+// CAPS (Curriculum and Assessment Policy Statement) framework.
 const NSC_SUBJECTS = [
-  // Home Languages
-  "English Home Language","Afrikaans Home Language","isiZulu Home Language",
-  "isiXhosa Home Language","Sesotho Home Language","Setswana Home Language",
-  "Sepedi Home Language","Xitsonga Home Language","Tshivenda Home Language",
-  "isiNdebele Home Language","siSwati Home Language",
-  // First Additional Languages
-  "English First Additional Language","Afrikaans First Additional Language",
-  "isiZulu First Additional Language","isiXhosa First Additional Language",
-  // Mathematics
-  "Mathematics","Mathematical Literacy",
-  // Sciences
-  "Physical Sciences","Life Sciences",
-  // Electives
-  "Geography","History","Accounting","Business Studies","Economics",
-  "Consumer Studies","Agricultural Sciences","Visual Arts","Music",
-  "Information Technology","Computer Applications Technology",
-  "Engineering Graphics and Design","Hospitality Studies","Tourism",
-  "Dramatic Arts","Religion Studies",
-  // Life Orientation (compulsory but excluded from APS at most institutions)
+
+  // ── Home Languages (all 11 official languages + SASL) ───────
+  "English Home Language",
+  "Afrikaans Home Language",
+  "isiZulu Home Language",
+  "isiXhosa Home Language",
+  "Sepedi Home Language",
+  "Sesotho Home Language",
+  "Setswana Home Language",
+  "siSwati Home Language",
+  "Tshivenda Home Language",
+  "isiNdebele Home Language",
+  "Xitsonga Home Language",
+  "South African Sign Language Home Language",  // Official DBE HL subject; examined since 2015
+
+  // ── First Additional Languages (all 11 official languages) ─
+  "English First Additional Language",
+  "Afrikaans First Additional Language",
+  "isiZulu First Additional Language",
+  "isiXhosa First Additional Language",
+  "Sepedi First Additional Language",
+  "Sesotho First Additional Language",
+  "Setswana First Additional Language",
+  "siSwati First Additional Language",
+  "Tshivenda First Additional Language",
+  "isiNdebele First Additional Language",
+  "Xitsonga First Additional Language",
+
+  // ── Second Additional Languages (official SA language SALs) ─
+  // Five official languages are examined at SAL level by DBE (2024 papers):
+  "Afrikaans Second Additional Language",
+  "isiNdebele Second Additional Language",
+  "isiXhosa Second Additional Language",
+  "Sesotho Second Additional Language",
+  "Sepedi Second Additional Language",
+
+  // ── Second Additional Languages (modern foreign languages) ─
+  // Offered at IEB and some multi-language public schools:
+  "Arabic Second Additional Language",
+  "French Second Additional Language",
+  "German Second Additional Language",
+  "Gujarati Second Additional Language",
+  "Hebrew Second Additional Language",
+  "Hindi Second Additional Language",
+  "Italian Second Additional Language",
+  "Latin Second Additional Language",
+  "Mandarin Second Additional Language",
+  "Modern Greek Second Additional Language",
+  "Portuguese Second Additional Language",
+  "Serbian Second Additional Language",
+  "Spanish Second Additional Language",
+  "Tamil Second Additional Language",
+  "Telugu Second Additional Language",
+  "Urdu Second Additional Language",
+
+  // ── Mathematics (three options — only one may be taken) ───
+  "Mathematics",            // Pure Mathematics — required by most traditional university degrees
+  "Mathematical Literacy",  // Applied numeracy — not accepted for engineering/science degrees
+  "Technical Mathematics",  // Technical stream — accepted at most UoTs; NOT accepted at traditional universities for STEM degrees
+
+  // ── Sciences ─────────────────────────────────────────────
+  "Physical Sciences",   // Required for engineering/science at traditional universities
+  "Life Sciences",       // Required for health/biological sciences degrees
+  "Technical Sciences",  // Technical stream counterpart to Physical Sciences; accepted at UoTs
+  "Marine Sciences",     // Coastal schools; covers marine biology & oceanography (DBE CAPS 2021)
+
+  // ── Social Sciences ───────────────────────────────────────
+  "Geography",
+  "History",
+
+  // ── Commerce ─────────────────────────────────────────────
+  "Accounting",
+  "Business Studies",
+  "Economics",
+
+  // ── Arts & Creative ───────────────────────────────────────
+  "Visual Arts",
+  "Music",
+  "Dramatic Arts",
+  "Dance Studies",
+  "Design",
+
+  // ── Technology ───────────────────────────────────────────
+  "Information Technology",
+  "Computer Applications Technology",
+  "Engineering Graphics and Design",
+
+  // ── Technical Occupational (Technical/Vocational schools) ─
+  "Civil Technology",            // Distinct DBE CAPS subject: brickwork, wood, civil services
+  "Electrical Technology",       // Distinct DBE CAPS subject: electronics, power systems
+  "Mechanical Technology",       // Distinct DBE CAPS subject: fitting, automotive, welding
+
+  // ── Agricultural ─────────────────────────────────────────
+  "Agricultural Sciences",           // Traditional agricultural theory & practice
+  "Agricultural Technology",         // Applied agri-technology (technical schools)
+  "Agricultural Management Practices", // Agri-business & farm management
+
+  // ── Vocational / Lifestyle ────────────────────────────────
+  "Consumer Studies",
+  "Hospitality Studies",
+  "Tourism",
+  "Religion Studies",
+
+  // ── Compulsory (excluded from APS at most institutions) ───
   "Life Orientation",
 ];
 
@@ -60,13 +147,15 @@ const NSC_SUBJECTS = [
 //   "commerce"      — Accounting / Business Studies / Economics
 //   "humanities"    — History / Geography / Drama / Arts etc.
 //   "technology"    — IT / CAT / Engineering Graphics & Design
-//   "agriculture"   — Agricultural Sciences
+//   "technical"     — Technical Maths/Sciences + Civil/Electrical/Mechanical Technology
+//   "agriculture"   — Agricultural Sciences / Technology / Management
 const STREAM_LABELS = {
   "science":       "Physical Sciences",
   "life-sciences": "Life Sciences",
   "commerce":      "Commerce",
   "humanities":    "Humanities",
   "technology":    "Technology",
+  "technical":     "Technical",
   "agriculture":   "Agriculture",
 };
 
@@ -88,21 +177,28 @@ function detectStreams(subjectGrades) {
   const has = s => subjects.includes(s);
   const streams = new Set();
 
-  // Physical Sciences stream: requires pure Maths AND Physical Sciences
+  // Physical Sciences stream: pure Maths AND Physical Sciences
   if (has("Mathematics") && has("Physical Sciences")) streams.add("science");
-  // Life Sciences stream: requires pure Maths AND Life Sciences
+  // Life Sciences stream: pure Maths AND Life Sciences
   if (has("Mathematics") && has("Life Sciences"))     streams.add("life-sciences");
   // Commerce stream: any commerce subject
   if (has("Accounting") || has("Business Studies") || has("Economics")) streams.add("commerce");
-  // Humanities stream: history, geography, or the arts
-  if (["History","Geography","Dramatic Arts","Visual Arts","Music",
-       "Religion Studies","Consumer Studies","Tourism","Hospitality Studies"]
+  // Humanities stream: history, geography, or any arts/lifestyle subject
+  if (["History","Geography","Dramatic Arts","Visual Arts","Music","Dance Studies",
+       "Design","Religion Studies","Consumer Studies","Tourism","Hospitality Studies",
+       "Marine Sciences"]
       .some(s => has(s))) streams.add("humanities");
-  // Technology stream: IT, CAT, or EGD
+  // Technology stream: IT, CAT, or Engineering Graphics & Design
   if (has("Information Technology") || has("Computer Applications Technology") ||
       has("Engineering Graphics and Design")) streams.add("technology");
-  // Agriculture stream
-  if (has("Agricultural Sciences")) streams.add("agriculture");
+  // Technical stream: Technical Mathematics/Sciences or trade technology subjects
+  // (offered mainly at technical high schools; UoTs accept these for diploma entry)
+  if (has("Technical Mathematics") || has("Technical Sciences") ||
+      has("Civil Technology") || has("Electrical Technology") ||
+      has("Mechanical Technology")) streams.add("technical");
+  // Agriculture stream: any agricultural subject
+  if (has("Agricultural Sciences") || has("Agricultural Technology") ||
+      has("Agricultural Management Practices")) streams.add("agriculture");
 
   return streams;
 }
@@ -416,61 +512,61 @@ const COURSES = [
     id:"dip-civil-tut", name:"Diploma: Civil Engineering Technology", faculty:"Engineering",
     nqfLevel:6, qualType:"Diploma", duration:"3 years",
     institutionId:"tut", minScore:24,
-    streams:["science"],
+    streams:["science","technical"],
     requiredSubjects:[
       { subject:"Mathematics",       minGrade:"4" },
       { subject:"Physical Sciences", minGrade:"4" },
     ],
     mandatorySubjects:["Mathematics","Physical Sciences"],
-    notes:"Leads to Advanced Diploma or bridging to BEng Tech.",
+    notes:"Leads to Advanced Diploma or bridging to BEng Tech. Technical Mathematics and Technical Sciences may be accepted in place of Mathematics and Physical Sciences — verify with TUT.",
   },
   {
     id:"dip-elect-dut", name:"Diploma: Electrical Engineering", faculty:"Engineering",
     nqfLevel:6, qualType:"Diploma", duration:"3 years",
     institutionId:"dut", minScore:22,
-    streams:["science"],
+    streams:["science","technical"],
     requiredSubjects:[
       { subject:"Mathematics",       minGrade:"4" },
       { subject:"Physical Sciences", minGrade:"3" },
     ],
     mandatorySubjects:["Mathematics","Physical Sciences"],
-    notes:"",
+    notes:"Technical Mathematics and Technical Sciences may be accepted — verify with DUT.",
   },
   {
     id:"dip-mech-cput", name:"Diploma: Mechanical Engineering", faculty:"Engineering",
     nqfLevel:6, qualType:"Diploma", duration:"3 years",
     institutionId:"cput", minScore:22,
-    streams:["science"],
+    streams:["science","technical"],
     requiredSubjects:[
       { subject:"Mathematics",       minGrade:"4" },
       { subject:"Physical Sciences", minGrade:"3" },
     ],
     mandatorySubjects:["Mathematics","Physical Sciences"],
-    notes:"Engineering Graphics & Design (Level 3+) is an advantage.",
+    notes:"Engineering Graphics & Design (Level 3+) is an advantage. Technical Mathematics and Technical Sciences may be accepted — verify with CPUT.",
   },
   {
     id:"dip-civil-cput", name:"Diploma: Civil Engineering", faculty:"Engineering",
     nqfLevel:6, qualType:"Diploma", duration:"3 years",
     institutionId:"cput", minScore:22,
-    streams:["science"],
+    streams:["science","technical"],
     requiredSubjects:[
       { subject:"Mathematics",       minGrade:"4" },
       { subject:"Physical Sciences", minGrade:"3" },
     ],
     mandatorySubjects:["Mathematics","Physical Sciences"],
-    notes:"",
+    notes:"Technical Mathematics and Technical Sciences may be accepted — verify with CPUT.",
   },
   {
     id:"hc-eng-cut", name:"Higher Certificate: Engineering Studies", faculty:"Engineering",
     nqfLevel:5, qualType:"Higher Certificate", duration:"1 year",
     institutionId:"cut", minScore:16,
-    streams:["science"],
+    streams:["science","technical"],
     requiredSubjects:[
       { subject:"Mathematics",       minGrade:"3" },
       { subject:"Physical Sciences", minGrade:"3" },
     ],
     mandatorySubjects:["Mathematics"],
-    notes:"Foundation pathway into engineering Diploma programmes.",
+    notes:"Foundation pathway into engineering Diploma programmes. Technical Mathematics and Technical Sciences accepted — verify with CUT.",
   },
 
   // ── Computing ────────────────────────────────────────────
@@ -993,6 +1089,1325 @@ const COURSES = [
     institutionId:"dut", minScore:18,
     streams:["commerce","humanities"],
     requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+
+  // ── Health Sciences (additional) ─────────────────────────
+  {
+    id:"physio-uct", name:"BSc Physiotherapy", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"uct", minScore:38,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"5" },
+      { subject:"Life Sciences",     minGrade:"5" },
+    ],
+    mandatorySubjects:["Life Sciences"],
+    notes:"NBT required. Selection is merit-based above minimum APS.",
+  },
+  {
+    id:"occther-uct", name:"BSc Occupational Therapy", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"uct", minScore:36,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Life Sciences",     minGrade:"5" },
+    ],
+    mandatorySubjects:["Life Sciences"],
+    notes:"NBT required.",
+  },
+  {
+    id:"bds-wits", name:"Bachelor of Dental Surgery (BDS)", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (5-year)", duration:"5 years",
+    institutionId:"wits", minScore:40,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"7" },
+      { subject:"Physical Sciences", minGrade:"6" },
+      { subject:"Life Sciences",     minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences","Life Sciences"],
+    notes:"NBT required. One of two dental schools in SA accepted by HPCSA.",
+  },
+  {
+    id:"occther-wits", name:"BSc Occupational Therapy", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"wits", minScore:34,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Life Sciences",     minGrade:"5" },
+    ],
+    mandatorySubjects:["Life Sciences"],
+    notes:"",
+  },
+  {
+    id:"physio-sun", name:"BSc Physiotherapy", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"sun", minScore:36,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"5" },
+      { subject:"Life Sciences",     minGrade:"5" },
+    ],
+    mandatorySubjects:["Life Sciences"],
+    notes:"Also offered in Afrikaans. NBT AQL required.",
+  },
+  {
+    id:"bpharm-sun", name:"Bachelor of Pharmacy (BPharm)", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"sun", minScore:36,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"5" },
+      { subject:"Life Sciences",     minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"",
+  },
+  {
+    id:"physio-up", name:"BSc Physiotherapy", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"up", minScore:32,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Life Sciences",     minGrade:"5" },
+    ],
+    mandatorySubjects:["Life Sciences"],
+    notes:"",
+  },
+  {
+    id:"bnurs-up", name:"Bachelor of Nursing Science (BNurs)", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"up", minScore:28,
+    streams:["life-sciences"],
+    requiredSubjects:[
+      { subject:"Life Sciences",     minGrade:"4" },
+      { subject:"Mathematics",       minGrade:"3" },
+    ],
+    mandatorySubjects:["Life Sciences"],
+    notes:"Mathematical Literacy at Level 5 also accepted.",
+  },
+  {
+    id:"mbchb-ukzn", name:"MBChB", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"MBChB (6-year)", duration:"6 years",
+    institutionId:"ukzn", minScore:38,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"7" },
+      { subject:"Physical Sciences", minGrade:"6" },
+      { subject:"Life Sciences",     minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences","Life Sciences"],
+    notes:"Offered at Nelson R Mandela School of Medicine, Durban. NBT required.",
+  },
+  {
+    id:"bpharm-ukzn", name:"Bachelor of Pharmacy (BPharm)", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ukzn", minScore:32,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"5" },
+      { subject:"Life Sciences",     minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"",
+  },
+  {
+    id:"mbchb-ufs", name:"MBChB", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"MBChB (6-year)", duration:"6 years",
+    institutionId:"ufs", minScore:36,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"5" },
+      { subject:"Life Sciences",     minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences","Life Sciences"],
+    notes:"Offered at Universitas Hospital, Bloemfontein. English and Afrikaans medium.",
+  },
+  {
+    id:"bpharm-ufs", name:"Bachelor of Pharmacy (BPharm)", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ufs", minScore:28,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+      { subject:"Physical Sciences", minGrade:"4" },
+      { subject:"Life Sciences",     minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"",
+  },
+  {
+    id:"bnurs-ufs", name:"Bachelor of Nursing Science (BNurs)", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ufs", minScore:24,
+    streams:["life-sciences"],
+    requiredSubjects:[
+      { subject:"Life Sciences",     minGrade:"4" },
+    ],
+    mandatorySubjects:["Life Sciences"],
+    notes:"Mathematical Literacy accepted.",
+  },
+  {
+    id:"mbchb-ul", name:"MBChB", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"MBChB (6-year)", duration:"6 years",
+    institutionId:"ul", minScore:30,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"4" },
+      { subject:"Life Sciences",     minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences","Life Sciences"],
+    notes:"Faculty of Health Sciences at UL's Mankweng campus. Focus on rural health.",
+  },
+  {
+    id:"bnurs-nmu", name:"Bachelor of Nursing Science (BNurs)", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nmu", minScore:24,
+    streams:["life-sciences"],
+    requiredSubjects:[
+      { subject:"Life Sciences",     minGrade:"4" },
+    ],
+    mandatorySubjects:["Life Sciences"],
+    notes:"",
+  },
+  {
+    id:"bpharm-nwu", name:"Bachelor of Pharmacy (BPharm)", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nwu", minScore:30,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"5" },
+      { subject:"Life Sciences",     minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Potchefstroom campus. Also offered in Afrikaans.",
+  },
+  {
+    id:"bpharm-smu", name:"Bachelor of Pharmacy (BPharm)", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"smu", minScore:28,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+      { subject:"Physical Sciences", minGrade:"4" },
+      { subject:"Life Sciences",     minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"",
+  },
+  {
+    id:"bnurs-smu", name:"Bachelor of Nursing Science (BNurs)", faculty:"Health Sciences",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"smu", minScore:26,
+    streams:["life-sciences"],
+    requiredSubjects:[
+      { subject:"Life Sciences",     minGrade:"4" },
+    ],
+    mandatorySubjects:["Life Sciences"],
+    notes:"",
+  },
+  {
+    id:"dip-nurs-tut", name:"Diploma: Nursing", faculty:"Health Sciences",
+    nqfLevel:6, qualType:"Diploma", duration:"3 years",
+    institutionId:"tut", minScore:22,
+    streams:["life-sciences"],
+    requiredSubjects:[
+      { subject:"Life Sciences",     minGrade:"4" },
+    ],
+    mandatorySubjects:["Life Sciences"],
+    notes:"Bridges to BNurs via RPL or further study.",
+  },
+
+  // ── Engineering (additional) ──────────────────────────────
+  {
+    id:"beng-elec-uct", name:"BSc(Eng) Electrical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"uct", minScore:40,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"7" },
+      { subject:"Physical Sciences", minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"NBT Mathematics required. (2027: APS 40)",
+  },
+  {
+    id:"beng-mech-uct", name:"BSc(Eng) Mechanical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"uct", minScore:40,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"7" },
+      { subject:"Physical Sciences", minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"NBT Mathematics required.",
+  },
+  {
+    id:"beng-chem-uct", name:"BSc(Eng) Chemical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"uct", minScore:40,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"7" },
+      { subject:"Physical Sciences", minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"NBT Mathematics required.",
+  },
+  {
+    id:"beng-civil-wits", name:"BSc(Eng) Civil Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"wits", minScore:40,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"7" },
+      { subject:"Physical Sciences", minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"NBTs required.",
+  },
+  {
+    id:"beng-mech-wits", name:"BSc(Eng) Mechanical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"wits", minScore:40,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"7" },
+      { subject:"Physical Sciences", minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"NBTs required.",
+  },
+  {
+    id:"beng-chem-wits", name:"BSc(Eng) Chemical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"wits", minScore:40,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"7" },
+      { subject:"Physical Sciences", minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"NBTs required.",
+  },
+  {
+    id:"beng-civil-sun", name:"BEng Civil Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"sun", minScore:36,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"7" },
+      { subject:"Physical Sciences", minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"NBT AQL required.",
+  },
+  {
+    id:"beng-elec-sun", name:"BEng Electrical & Electronic Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"sun", minScore:36,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"7" },
+      { subject:"Physical Sciences", minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"NBT AQL required.",
+  },
+  {
+    id:"beng-mech-sun", name:"BEng Mechanical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"sun", minScore:36,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"7" },
+      { subject:"Physical Sciences", minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"NBT AQL required.",
+  },
+  {
+    id:"beng-civil-up", name:"BEng Civil Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"up", minScore:35,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"(2027: all BEng programmes at UP require APS 35)",
+  },
+  {
+    id:"beng-chem-up", name:"BEng Chemical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"up", minScore:35,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"(2027: all BEng programmes at UP require APS 35)",
+  },
+  {
+    id:"beng-computer-up", name:"BEng Computer Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"up", minScore:35,
+    streams:["science","technology"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"(2027: all BEng programmes at UP require APS 35)",
+  },
+  {
+    id:"beng-civil-ukzn", name:"BScEng Civil Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ukzn", minScore:32,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"College of Agriculture, Engineering & Science.",
+  },
+  {
+    id:"beng-elec-ukzn", name:"BScEng Electrical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ukzn", minScore:32,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"",
+  },
+  {
+    id:"beng-mech-ukzn", name:"BScEng Mechanical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ukzn", minScore:32,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"",
+  },
+  {
+    id:"beng-civil-uj", name:"BEng Civil Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"uj", minScore:28,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Doornfontein campus. Engineering Graphics & Design is an advantage.",
+  },
+  {
+    id:"beng-elec-uj", name:"BEng Electrical/Electronic Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"uj", minScore:28,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Doornfontein campus.",
+  },
+  {
+    id:"beng-mech-uj", name:"BEng Mechanical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"uj", minScore:28,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Doornfontein campus.",
+  },
+  {
+    id:"beng-civil-nwu", name:"BEng Civil Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nwu", minScore:28,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Potchefstroom campus.",
+  },
+  {
+    id:"beng-elec-nwu", name:"BEng Electrical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nwu", minScore:28,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Potchefstroom campus.",
+  },
+  {
+    id:"beng-mech-nwu", name:"BEng Mechanical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nwu", minScore:28,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Potchefstroom campus.",
+  },
+  {
+    id:"beng-chem-nwu", name:"BEng Chemical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nwu", minScore:28,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Potchefstroom campus.",
+  },
+  {
+    id:"beng-civil-nmu", name:"BEng Civil Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nmu", minScore:28,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Faculty of Engineering, Built Environment & Information Technology.",
+  },
+  {
+    id:"beng-elec-nmu", name:"BEng Electrical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nmu", minScore:28,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"",
+  },
+  {
+    id:"beng-mech-nmu", name:"BEng Mechanical Engineering", faculty:"Engineering",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nmu", minScore:28,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"",
+  },
+  {
+    id:"dip-mech-dut", name:"Diploma: Mechanical Engineering", faculty:"Engineering",
+    nqfLevel:6, qualType:"Diploma", duration:"3 years",
+    institutionId:"dut", minScore:22,
+    streams:["science","technical"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+      { subject:"Physical Sciences", minGrade:"3" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Technical Mathematics and Technical Sciences may be accepted — verify with DUT.",
+  },
+  {
+    id:"dip-civil-dut", name:"Diploma: Civil Engineering", faculty:"Engineering",
+    nqfLevel:6, qualType:"Diploma", duration:"3 years",
+    institutionId:"dut", minScore:22,
+    streams:["science","technical"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+      { subject:"Physical Sciences", minGrade:"3" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Technical Mathematics and Technical Sciences may be accepted — verify with DUT.",
+  },
+  {
+    id:"dip-elec-tut", name:"Diploma: Electrical Engineering Technology", faculty:"Engineering",
+    nqfLevel:6, qualType:"Diploma", duration:"3 years",
+    institutionId:"tut", minScore:22,
+    streams:["science","technical"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+      { subject:"Physical Sciences", minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Specialisations: Power Systems, Electronics. Technical Mathematics/Sciences may be accepted — verify with TUT.",
+  },
+  {
+    id:"dip-mech-tut", name:"Diploma: Mechanical Engineering Technology", faculty:"Engineering",
+    nqfLevel:6, qualType:"Diploma", duration:"3 years",
+    institutionId:"tut", minScore:22,
+    streams:["science","technical"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+      { subject:"Physical Sciences", minGrade:"3" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Technical Mathematics and Technical Sciences may be accepted — verify with TUT.",
+  },
+  {
+    id:"dip-civil-cut", name:"Diploma: Civil Engineering Technology", faculty:"Engineering",
+    nqfLevel:6, qualType:"Diploma", duration:"3 years",
+    institutionId:"cut", minScore:18,
+    streams:["science","technical"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"3" },
+      { subject:"Physical Sciences", minGrade:"3" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"Technical Mathematics and Technical Sciences may be accepted — verify with CUT.",
+  },
+  {
+    id:"dip-elec-cut", name:"Diploma: Electrical Engineering Technology", faculty:"Engineering",
+    nqfLevel:6, qualType:"Diploma", duration:"3 years",
+    institutionId:"cut", minScore:18,
+    streams:["science","technical"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"3" },
+      { subject:"Physical Sciences", minGrade:"3" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"Technical Mathematics and Technical Sciences may be accepted — verify with CUT.",
+  },
+
+  // ── Architecture & Built Environment ─────────────────────
+  {
+    id:"bas-uct", name:"Bachelor of Architectural Studies (BAS)", faculty:"Architecture & Built Environment",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"uct", minScore:36,
+    streams:["humanities","science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"First of a two-part qualification: BAS (3yr) + MArch (2yr). Portfolio may be required. NBT required.",
+  },
+  {
+    id:"barch-wits", name:"Bachelor of Science: Architecture", faculty:"Architecture & Built Environment",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"wits", minScore:35,
+    streams:["humanities","science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"Leads to MArch professional degree. Portfolio submission required. NBT required.",
+  },
+  {
+    id:"barch-up", name:"BArch (Professional Architecture)", faculty:"Architecture & Built Environment",
+    nqfLevel:8, qualType:"Professional Degree (5-year)", duration:"5 years",
+    institutionId:"up", minScore:32,
+    streams:["humanities","science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"UP offers a direct 5-year professional BArch. Portfolio required.",
+  },
+  {
+    id:"dip-arch-tut", name:"Diploma: Architectural Technology", faculty:"Architecture & Built Environment",
+    nqfLevel:6, qualType:"Diploma", duration:"3 years",
+    institutionId:"tut", minScore:20,
+    streams:["humanities","science","technical"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"Technical Mathematics accepted. Engineering Graphics & Design is a strong advantage.",
+  },
+
+  // ── Law (additional) ──────────────────────────────────────
+  {
+    id:"llb-sun", name:"Bachelor of Laws (LLB)", faculty:"Law",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"sun", minScore:36,
+    streams:["humanities","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Offered in Afrikaans and English. NBT AL required.",
+  },
+  {
+    id:"llb-ukzn", name:"Bachelor of Laws (LLB)", faculty:"Law",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ukzn", minScore:28,
+    streams:["humanities","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"llb-ufs", name:"Bachelor of Laws (LLB)", faculty:"Law",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ufs", minScore:30,
+    streams:["humanities","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Faculty of Law at the main Bloemfontein campus.",
+  },
+  {
+    id:"llb-nmu", name:"Bachelor of Laws (LLB)", faculty:"Law",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nmu", minScore:26,
+    streams:["humanities","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"llb-ru", name:"Bachelor of Laws (LLB)", faculty:"Law",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ru", minScore:28,
+    streams:["humanities","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"llb-ul", name:"Bachelor of Laws (LLB)", faculty:"Law",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ul", minScore:22,
+    streams:["humanities","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"llb-unisa", name:"Bachelor of Laws (LLB)", faculty:"Law",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"unisa", minScore:20,
+    streams:["humanities","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Distance learning. Mature age exemptions available.",
+  },
+
+  // ── Commerce (additional) ─────────────────────────────────
+  {
+    id:"bcom-sun", name:"Bachelor of Commerce (BCom)", faculty:"Commerce",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"sun", minScore:34,
+    streams:["commerce"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"Streams: Economics, Actuarial, Management Accounting, etc. NBT AQL required.",
+  },
+  {
+    id:"bcom-acc-sun", name:"Bachelor of Accounting (BAcc)", faculty:"Commerce",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"sun", minScore:36,
+    streams:["commerce"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"Pathway to CA(SA). Highly competitive. NBT AQL required.",
+  },
+  {
+    id:"bcom-ukzn", name:"Bachelor of Commerce (BCom)", faculty:"Commerce",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ukzn", minScore:26,
+    streams:["commerce"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"Mathematical Literacy at Level 6 accepted for some BCom streams.",
+  },
+  {
+    id:"bcom-ufs", name:"Bachelor of Commerce (BCom)", faculty:"Commerce",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ufs", minScore:28,
+    streams:["commerce"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"Faculty of Economic & Management Sciences.",
+  },
+  {
+    id:"bcom-nmu", name:"Bachelor of Commerce (BCom)", faculty:"Commerce",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"nmu", minScore:24,
+    streams:["commerce"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bcom-ru", name:"Bachelor of Commerce (BCom)", faculty:"Commerce",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ru", minScore:26,
+    streams:["commerce"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"",
+  },
+  {
+    id:"bcom-acc-ru", name:"BCom Accounting", faculty:"Commerce",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ru", minScore:28,
+    streams:["commerce"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"",
+  },
+  {
+    id:"bcom-ul", name:"Bachelor of Commerce (BCom)", faculty:"Commerce",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ul", minScore:22,
+    streams:["commerce"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"3" },
+    ],
+    mandatorySubjects:[],
+    notes:"Mathematical Literacy at Level 5 accepted.",
+  },
+  {
+    id:"bcom-uwc", name:"Bachelor of Commerce (BCom)", faculty:"Commerce",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"uwc", minScore:26,
+    streams:["commerce"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bcom-nwu", name:"Bachelor of Commerce (BCom)", faculty:"Commerce",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"nwu", minScore:26,
+    streams:["commerce"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"Also offered in Afrikaans.",
+  },
+
+  // ── Sciences (additional) ─────────────────────────────────
+  {
+    id:"bsc-wits", name:"Bachelor of Science (BSc)", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"wits", minScore:30,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"Majors: Physics, Chemistry, Biology, Maths, Computer Science, etc. NBT required.",
+  },
+  {
+    id:"bsc-sun", name:"Bachelor of Science (BSc)", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"sun", minScore:34,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"6" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"Majors: Chemistry, Biochemistry, Physics, Microbiology, etc. NBT AQL required.",
+  },
+  {
+    id:"bsc-up", name:"Bachelor of Science (BSc)", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"up", minScore:28,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"Wide range of majors. Some specialisations (Actuarial, Medical Sciences) require higher APS.",
+  },
+  {
+    id:"bsc-ukzn", name:"Bachelor of Science (BSc)", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ukzn", minScore:26,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"",
+  },
+  {
+    id:"bsc-uj", name:"Bachelor of Science (BSc)", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"uj", minScore:26,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"",
+  },
+  {
+    id:"bsc-ufs", name:"Bachelor of Science (BSc)", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ufs", minScore:24,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+      { subject:"Physical Sciences", minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"Faculty of Natural & Agricultural Sciences.",
+  },
+  {
+    id:"bsc-nmu", name:"Bachelor of Science (BSc)", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"nmu", minScore:22,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+      { subject:"Physical Sciences", minGrade:"3" },
+    ],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bsc-chem-ru", name:"BSc Chemistry", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ru", minScore:26,
+    streams:["science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"5" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"",
+  },
+  {
+    id:"bsc-biochem-ru", name:"BSc Biochemistry & Microbiology", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ru", minScore:26,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"4" },
+      { subject:"Life Sciences",     minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"Rhodes has a strong research-focused biochemistry department.",
+  },
+  {
+    id:"bsc-ul", name:"Bachelor of Science (BSc)", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ul", minScore:20,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bsc-uwc", name:"Bachelor of Science (BSc)", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"uwc", minScore:24,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+      { subject:"Physical Sciences", minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bsc-nwu", name:"Bachelor of Science (BSc)", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"nwu", minScore:24,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"5" },
+      { subject:"Physical Sciences", minGrade:"4" },
+    ],
+    mandatorySubjects:["Mathematics"],
+    notes:"Potchefstroom campus; also at Mafikeng campus.",
+  },
+  {
+    id:"bsc-unisa", name:"Bachelor of Science (BSc)", faculty:"Sciences",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"unisa", minScore:20,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"Distance learning. Majors: Maths, Physics, Chemistry, Biology, etc.",
+  },
+
+  // ── Humanities / BA (additional) ─────────────────────────
+  {
+    id:"ba-sun", name:"Bachelor of Arts (BA)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"sun", minScore:28,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Faculty of Arts & Social Sciences. Many majors offered in Afrikaans and English.",
+  },
+  {
+    id:"bsocsc-uct", name:"Bachelor of Social Science (BSocSci)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"uct", minScore:33,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Majors: Sociology, Political Studies, Economics, Social Development, etc. NBT required.",
+  },
+  {
+    id:"ba-ukzn", name:"Bachelor of Arts (BA)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ukzn", minScore:24,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"ba-uj", name:"Bachelor of Arts (BA)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"uj", minScore:24,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"ba-ufs", name:"Bachelor of Arts (BA)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ufs", minScore:22,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Faculty of Humanities. Also offered in Afrikaans.",
+  },
+  {
+    id:"ba-nmu", name:"Bachelor of Arts (BA)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"nmu", minScore:22,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"ba-ru", name:"Bachelor of Arts (BA)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ru", minScore:26,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Majors: English, History, Politics, Philosophy, Sociology, Music, Fine Art, etc.",
+  },
+  {
+    id:"ba-ul", name:"Bachelor of Arts (BA)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ul", minScore:20,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"ba-uwc", name:"Bachelor of Arts (BA)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"uwc", minScore:22,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"ba-nwu", name:"Bachelor of Arts (BA)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"nwu", minScore:22,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Also offered in Afrikaans.",
+  },
+  {
+    id:"ba-unisa", name:"Bachelor of Arts (BA)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"unisa", minScore:20,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Distance learning. Wide range of majors.",
+  },
+  {
+    id:"bjourn-ukzn", name:"Bachelor of Arts: Communication & Media", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ukzn", minScore:28,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bjourn-uj", name:"Bachelor of Arts: Communication", faculty:"Humanities",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"uj", minScore:26,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Specialisations: Journalism, Media Studies, Public Relations, Corporate Communication.",
+  },
+  {
+    id:"bsw-nmu", name:"Bachelor of Social Work (BSW)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nmu", minScore:22,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bsw-uwc", name:"Bachelor of Social Work (BSW)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"uwc", minScore:22,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bsw-ufs", name:"Bachelor of Social Work (BSW)", faculty:"Humanities",
+    nqfLevel:7, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ufs", minScore:22,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+
+  // ── Education (additional) ────────────────────────────────
+  {
+    id:"bed-wits", name:"Bachelor of Education (BEd)", faculty:"Education",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"wits", minScore:28,
+    streams:["humanities","science","life-sciences","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Specialisations: Foundation Phase, Senior/FET. NBT required.",
+  },
+  {
+    id:"bed-sun", name:"Bachelor of Education (BEd)", faculty:"Education",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"sun", minScore:28,
+    streams:["humanities","science","life-sciences","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Also offered in Afrikaans. Phases: Foundation, Intermediate, Senior/FET.",
+  },
+  {
+    id:"bed-uj", name:"Bachelor of Education (BEd)", faculty:"Education",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"uj", minScore:24,
+    streams:["humanities","science","life-sciences","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Phases: Foundation, Intermediate, Senior/FET.",
+  },
+  {
+    id:"bed-ufs", name:"Bachelor of Education (BEd)", faculty:"Education",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ufs", minScore:24,
+    streams:["humanities","science","life-sciences","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Also offered in Afrikaans. All phases available.",
+  },
+  {
+    id:"bed-nmu", name:"Bachelor of Education (BEd)", faculty:"Education",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"nmu", minScore:24,
+    streams:["humanities","science","life-sciences","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bed-ru", name:"Bachelor of Education (BEd)", faculty:"Education",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ru", minScore:26,
+    streams:["humanities","science","life-sciences","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Phases: Foundation, Intermediate, Senior/FET.",
+  },
+  {
+    id:"bed-ul", name:"Bachelor of Education (BEd)", faculty:"Education",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"ul", minScore:20,
+    streams:["humanities","science","life-sciences","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bed-uwc", name:"Bachelor of Education (BEd)", faculty:"Education",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"uwc", minScore:24,
+    streams:["humanities","science","life-sciences","commerce"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bed-up-senior", name:"BEd: Senior & FET Phase Teaching", faculty:"Education",
+    nqfLevel:8, qualType:"Professional Degree (4-year)", duration:"4 years",
+    institutionId:"up", minScore:26,
+    streams:["humanities","science","life-sciences","commerce","technical"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Subject specialisation required. Technology subjects welcome.",
+  },
+
+  // ── Agriculture (additional) ──────────────────────────────
+  {
+    id:"bscagric-ukzn", name:"BSc Agriculture", faculty:"Agriculture",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ukzn", minScore:24,
+    streams:["agriculture","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"bscagric-ufs", name:"BSc Agriculture", faculty:"Agriculture",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ufs", minScore:24,
+    streams:["agriculture","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"Faculty of Natural & Agricultural Sciences, Qwaqwa and Bloemfontein campuses.",
+  },
+  {
+    id:"bscagric-nwu", name:"BSc Agriculture", faculty:"Agriculture",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"nwu", minScore:24,
+    streams:["agriculture","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+    ],
+    mandatorySubjects:[],
+    notes:"Mafikeng campus; focus on agri-business and sustainable farming.",
+  },
+
+  // ── Creative Arts & Design (additional) ──────────────────
+  {
+    id:"ba-finearts-wits", name:"Bachelor of Arts: Fine Arts", faculty:"Creative Arts & Design",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"wits", minScore:28,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Portfolio required. Wits School of Arts covers Visual Arts, Music, Theatre & Performance.",
+  },
+  {
+    id:"ba-music-uct", name:"BMus (Bachelor of Music)", faculty:"Creative Arts & Design",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"4 years",
+    institutionId:"uct", minScore:30,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Audition required. South African College of Music (SACM). Streams: Performance, Composition, Musicology.",
+  },
+  {
+    id:"ba-drama-ukzn", name:"Bachelor of Arts: Drama", faculty:"Creative Arts & Design",
+    nqfLevel:7, qualType:"Bachelor's Degree", duration:"3 years",
+    institutionId:"ukzn", minScore:24,
+    streams:["humanities"],
+    requiredSubjects:[],
+    mandatorySubjects:[],
+    notes:"Audition or portfolio may be required.",
+  },
+  {
+    id:"dip-foodtech-cput", name:"Diploma: Food Technology", faculty:"Creative Arts & Design",
+    nqfLevel:6, qualType:"Diploma", duration:"3 years",
+    institutionId:"cput", minScore:20,
+    streams:["science","life-sciences"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"3" },
+      { subject:"Physical Sciences", minGrade:"3" },
+    ],
+    mandatorySubjects:[],
+    notes:"",
+  },
+  {
+    id:"dip-elec-cput", name:"Diploma: Electrical Engineering Technology", faculty:"Engineering",
+    nqfLevel:6, qualType:"Diploma", duration:"3 years",
+    institutionId:"cput", minScore:22,
+    streams:["science","technical"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"4" },
+      { subject:"Physical Sciences", minGrade:"3" },
+    ],
+    mandatorySubjects:["Mathematics","Physical Sciences"],
+    notes:"Technical Mathematics and Technical Sciences may be accepted — verify with CPUT.",
+  },
+  {
+    id:"dip-it-cut", name:"Diploma: Information Technology", faculty:"Computing",
+    nqfLevel:6, qualType:"Diploma", duration:"3 years",
+    institutionId:"cut", minScore:18,
+    streams:["technology","science"],
+    requiredSubjects:[
+      { subject:"Mathematics",       minGrade:"3" },
+    ],
     mandatorySubjects:[],
     notes:"",
   },
